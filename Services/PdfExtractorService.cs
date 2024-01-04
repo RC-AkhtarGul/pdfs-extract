@@ -21,32 +21,87 @@ public class PdfExtractorService
                     text.Write(currentText);
                 }
 
-                return ExtractStudentInfo(text.ToString());
+                return ExtractTranscriptInfo(text.ToString());
             }
         }
     }
-
-    private string ExtractStudentInfo(string pdfText)
+    private string ExtractTranscriptInfo(string pdfText)
     {
-        // Define a regular expression pattern to match the student's name and registration number
+        // Regex to match student name and registration
         string pattern = @"Student's Name: (?<Name>.+?) Registration No: (?<RegistrationNo>\d+)";
 
-        // Use Regex.Match to find the match
         Match match = Regex.Match(pdfText, pattern);
 
-        // Check if the match is successful
         if (match.Success)
         {
-            // Access the captured groups using the group names
-            string studentName = match.Groups["Name"].Value;
-            string registrationNo = match.Groups["RegistrationNo"].Value;
+            string name = match.Groups["Name"].Value;
+            string registration = match.Groups["RegistrationNo"].Value;
 
-            // Construct a string with the extracted information
-            return $"Student's Name: {studentName}\nRegistration No: {registrationNo}";
+            // New regex to match degree info
+            pattern = @"Degree Awarded : (?<Degree>.*?) Specialization: (?<Specialization>.*?) Date Awarded: (?<DateAwarded>\d{2}-\w{3}-\d{4})";
+
+            match = Regex.Match(pdfText, pattern);
+
+            string degree = match.Groups["Degree"].Value;
+            string specialization = match.Groups["Specialization"].Value;
+            string dateAwarded = match.Groups["DateAwarded"].Value;
+
+            // Extracting course details
+            pattern = @"Semester\s+Year\s+Course No\s+Course Title\s+CH\s+Grade\s+SCH\s+SGP\s+SGPA\s+CCH\s+CGP\s+CGPA(.+?)Degree Requirements Completed:";
+            match = Regex.Match(pdfText, pattern, RegexOptions.Singleline);
+
+            if (match.Success)
+            {
+                string courseDetails = match.Groups[1].Value;
+
+                // You can process the course details further if needed
+                // For now, let's include it in the result string
+                string result = $"Name: {name}\nRegistration No: {registration}\nDegree: {degree}\nSpecialization: {specialization}\nDate Awarded: {dateAwarded}\n\nCourse Details:\n{courseDetails}";
+
+                return result;
+            }
+            else
+            {
+                return "Course details not found";
+            }
         }
         else
         {
-            return "Match not found";
+            return "Student information not found";
         }
     }
+
+
+    //private string ExtractStudentInfo(string pdfText)
+    //{
+    //    // Regex to match student name and registration
+    //    string pattern = @"Student's Name: (?<Name>.+?) Registration No: (?<RegistrationNo>\d+)";
+
+    //    Match match = Regex.Match(pdfText, pattern);
+
+    //    if (match.Success)
+    //    {
+
+    //        string name = match.Groups["Name"].Value;
+    //        string registration = match.Groups["RegistrationNo"].Value;
+
+    //        // New regex to match degree info
+    //        pattern = @"Degree Awarded : (?<Degree>.*?) Specialization: (?<Specialization>.*?) Date Awarded: (?<DateAwarded>\d{2}-\w{3}-\d{4})";
+
+    //        match = Regex.Match(pdfText, pattern);
+
+    //        string degree = match.Groups["Degree"].Value;
+    //        string specialization = match.Groups["Specialization"].Value;
+    //        string dateAwarded = match.Groups["DateAwarded"].Value;
+
+    //        // Construct result string
+    //        return $"Name: {name}\nRegistration No: {registration}\nDegree: {degree}\nSpecialization: {specialization}\nDate Awarded: {dateAwarded}";
+
+    //    }
+    //    else
+    //    {
+    //        return "Match not found";
+    //    }
+
+    //}
 }
